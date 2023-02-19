@@ -14,7 +14,8 @@ export function updateRestrictedElementsList() {
         restrictedStr = restrictedStr.slice(0, -2)
     }
 
-    document.getElementById('restrictedElementsDiv--list').innerHTML = restrictedStr
+    document.getElementById('restrictedElementsDiv--list').innerHTML =
+        restrictedStr
 }
 
 export function updateRestrictedElementsInScope(scope = globalScope) {
@@ -36,7 +37,8 @@ export function showRestricted() {
     document.getElementById('restrictedDiv').classList.remove('display--none')
     // Show no help text for restricted elements
     document.getElementById('Help').classList.remove('show')
-    document.getElementById('restrictedDiv').innerHTML = 'The element has been restricted by mentor. Usage might lead to deduction in marks'
+    document.getElementById('restrictedDiv').innerHTML =
+        'The element has been restricted by mentor. Usage might lead to deduction in marks'
 }
 
 export function hideRestricted() {

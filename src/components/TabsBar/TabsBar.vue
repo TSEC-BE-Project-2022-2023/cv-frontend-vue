@@ -156,9 +156,7 @@ function deleteCircuit(circuitItem) {
     updateCount.value++
 }
 
-
 function dialogBoxConformation(selectedOption, circuitItem) {
-
     SimulatorState.dialogBox.create_circuit = false
     if (selectedOption == 'confirmDeletion') {
         deleteCircuit(circuitItem)

@@ -65,11 +65,11 @@ export function verilogModeSet(mode) {
     if (mode == verilogMode) return
     verilogMode = mode
     if (mode) {
-        document.getElementById('code-window').style.display = 'block';
-        document.querySelector('.elementPanel').style.display = 'none';
-        document.querySelector('.timing-diagram-panel').style.display = 'none';
-        document.querySelector('.quick-btn').style.display = 'none';
-        document.getElementById('verilogEditorPanel').style.display = 'block';
+        document.getElementById('code-window').style.display = 'block'
+        document.querySelector('.elementPanel').style.display = 'none'
+        document.querySelector('.timing-diagram-panel').style.display = 'none'
+        document.querySelector('.quick-btn').style.display = 'none'
+        document.getElementById('verilogEditorPanel').style.display = 'block'
         if (!embed) {
             simulationArea.lastSelected = globalScope.root
             showProperties(undefined)
@@ -77,11 +77,11 @@ export function verilogModeSet(mode) {
         }
         resetVerilogCode()
     } else {
-        document.getElementById('code-window').style.display = 'none';
-        document.querySelector('.elementPanel').style.display = 'block';
-        document.querySelector('.timing-diagram-panel').style.display = 'block';
-        document.querySelector('.quick-btn').style.display = 'block';
-        document.getElementById('verilogEditorPanel').style.display = 'none';
+        document.getElementById('code-window').style.display = 'none'
+        document.querySelector('.elementPanel').style.display = 'block'
+        document.querySelector('.timing-diagram-panel').style.display = 'block'
+        document.querySelector('.quick-btn').style.display = 'block'
+        document.getElementById('verilogEditorPanel').style.display = 'none'
     }
 }
 
@@ -185,37 +185,41 @@ export default function generateVerilogCircuit(
     fetch(url, {
         method: 'POST',
         headers: {
-            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-CSRF-Token': document
+                .querySelector('meta[name="csrf-token"]')
+                .getAttribute('content'),
         },
-        body: params
-    }).then((response) => {
-        var errorCode = response.status
-        if (errorCode == 500) {
-            showError('Could not connect to Yosys');
-        } else {
-            var circuitData = response
-            scope.initialize()
-            for (var id in scope.verilogMetadata.subCircuitScopeIds)
-                delete scopeList[id]
-            scope.verilogMetadata.subCircuitScopeIds = []
-            scope.verilogMetadata.code = verilogCode
-            var subCircuitScope = {}
-            YosysJSON2CV(
-                circuitData,
-                globalScope,
-                'verilogCircuit',
-                subCircuitScope,
-                true
-            )
-            changeCircuitName(circuitData.name)
-            showMessage('Verilog Circuit Successfully Created')
-            document.getElementById('verilogOutput').innerHTML = "";
-        }
-    }).catch((error) => {
-        showError('There is some issue with the code');
-        var errorMessage = error
-        document.getElementById('verilogOutput').innerHTML = errorMessage
+        body: params,
     })
+        .then((response) => {
+            var errorCode = response.status
+            if (errorCode == 500) {
+                showError('Could not connect to Yosys')
+            } else {
+                var circuitData = response
+                scope.initialize()
+                for (var id in scope.verilogMetadata.subCircuitScopeIds)
+                    delete scopeList[id]
+                scope.verilogMetadata.subCircuitScopeIds = []
+                scope.verilogMetadata.code = verilogCode
+                var subCircuitScope = {}
+                YosysJSON2CV(
+                    circuitData,
+                    globalScope,
+                    'verilogCircuit',
+                    subCircuitScope,
+                    true
+                )
+                changeCircuitName(circuitData.name)
+                showMessage('Verilog Circuit Successfully Created')
+                document.getElementById('verilogOutput').innerHTML = ''
+            }
+        })
+        .catch((error) => {
+            showError('There is some issue with the code')
+            var errorMessage = error
+            document.getElementById('verilogOutput').innerHTML = errorMessage
+        })
 }
 
 export function setupCodeMirrorEnvironment() {

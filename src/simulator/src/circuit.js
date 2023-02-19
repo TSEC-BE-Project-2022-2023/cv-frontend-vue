@@ -40,7 +40,6 @@ import { updateTestbenchUI } from './testbench'
 import { SimulatorStore } from '#/store/SimulatorStore/SimulatorStore'
 import { toRef, toRefs } from 'vue'
 
-
 export const circuitProperty = {
     toggleLayoutMode,
     setProjectName,
@@ -106,7 +105,6 @@ export function switchCircuit(id) {
 export function getDependenciesList(scopeId) {
     let scope = scopeList[scopeId]
     if (scope == undefined) scope = scopeList[globalScope.id]
-
 
     let dependencies = ''
     for (id in scopeList) {
