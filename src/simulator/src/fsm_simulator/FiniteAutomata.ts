@@ -14,7 +14,10 @@ export enum FiniteAutomataType {
 
 // 1, 2
 export class BitSet implements Hashable {
-    constructor(public value: number, public length: number) {}
+    constructor(public value: number, public length: number) {
+        this.value = value
+        this.length = length
+    }
     //1, 2 -> 01
     static concat(...bitSets: BitSet[]) {
         let combinedValue = 0
@@ -304,6 +307,7 @@ export class FiniteAutomataState {
     }
 
     addConnection(bitSet: BitSet, state: FiniteAutomataState) {
+        console.log("addcons:", bitSet)
         if (!this.connections.has(bitSet)) {
             this.connections.set(bitSet, [])
         }
