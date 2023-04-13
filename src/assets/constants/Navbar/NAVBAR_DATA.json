@@ -124,6 +124,12 @@
                 "item": "export_verilog",
                 "itemid": "generateVerilog",
                 "attributes": []
+            },
+            {
+                "id": "7",
+                "item": "generate_circuit",
+                "itemid": "generateCircuit",
+                "attributes": []
             }
         ]
     },

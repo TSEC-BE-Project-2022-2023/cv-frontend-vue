@@ -21,6 +21,7 @@ import {
 } from './Verilog2CV'
 import { generateVerilog } from './verilog'
 import { bitConverterDialog } from './utils'
+import generateCircuit from './generateCircuit'
 import { keyBinder } from './hotkey_binder/keyBinder'
 
 const logixFunction = {}
@@ -47,6 +48,7 @@ logixFunction.generateVerilog = generateVerilog
 logixFunction.bitconverter = bitConverterDialog
 logixFunction.createNewCircuitScope = createNewCircuitScope
 logixFunction.customShortcut = keyBinder
+logixFunction.generateCircuit = generateCircuit
 export default logixFunction
 
 // Hack to restart tour guide
