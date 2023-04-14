@@ -136,4 +136,6 @@ export default function generateCircuit() {
     const statesList = Object.values(finiteAutomataStates)
     let finiteAutomata = new FiniteAutomata('DFA', inputVars, statesList)
     finiteAutomata.formatCanonicalExpression()
+
+    drawCircuit(finiteAutomata)
 }

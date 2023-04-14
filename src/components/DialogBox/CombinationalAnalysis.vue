@@ -45,6 +45,7 @@ import OrGate from '#/simulator/src/modules/OrGate'
 import NotGate from '#/simulator/src/modules/NotGate'
 import simulationArea from '#/simulator/src/simulationArea'
 import { findDimensions } from '#/simulator/src/canvasApi'
+import { expr } from 'jquery'
 
 const SimulatorState = useState()
 onMounted(() => {
@@ -752,10 +753,11 @@ window.drawCircuit = (finiteAutomata) => {
     }
 
     let inputs = []
+
     let lastInputNodes = []
 
-    let InputStartX = 100
-    let InputStartY = 100
+    let InputStartX = -500
+    let InputStartY = -500
     for (let i = 0; i < numVarArgs; i++) {
         inputs.push(new Input(InputStartX, InputStartY))
         inputs[i].newDirection('DOWN')
@@ -800,20 +802,151 @@ window.drawCircuit = (finiteAutomata) => {
         lastInputNodes[i] = [notGate.output1, n1]
         InputStartX = InputStartX + 100
     }
-    for (let j = 0; j < newStateMinimizedExpressions.length; j++) {
-        let term = newStateMinimizedExpressions[j].split('')
-        let termCount = term.reduce((c, e) => (e === '-' ? c : c + 1), 0)
-        if(termCount === 1) {
-            continue;
+    console.log(newStateMinimizedExpressions)
+    let allMinimizedExpressions = [
+        ...newStateMinimizedExpressions,
+        ...outputStateMinimizedExpressions,
+    ]
+    console.log(outputStateMinimizedExpressions)
+    let allOutputs = []
+    for (let i = 0, counter = 0; i < allMinimizedExpressions.length; i++) {
+        let output = []
+        let expression = allMinimizedExpressions[i]
+        for (let term of expression) {
+            let count = 0
+            for (let j = 0; j < term.length; j++) {
+                if (term[j] !== '-') {
+                    count += 1
+                }
+            }
+            console.log(count)
+            if (count === 1) {
+                const n = new Node(
+                    InputStartX + 20,
+                    InputStartY + 100 + counter * 80 + i * 30,
+                    2,
+                    globalScope.root
+                )
+
+                for (let k = 0; k < term.length; k++) {
+                    if (term[k] === '-') continue
+                    let lastInputNode
+                    if (term[k] === '0') {
+                        lastInputNode = lastInputNodes[k][0]
+                    } else {
+                        lastInputNode = lastInputNodes[k][1]
+                    }
+                    let x = 0,
+                        y = 0
+                    if (lastInputNode.parent.x === 0) {
+                        x = lastInputNode.x
+                    } else {
+                        x = lastInputNode.parent.x
+                    }
+                    let n2 = new Node(
+                        x,
+                        InputStartY + 100 + counter * 80 + i * 30,
+                        2,
+                        globalScope.root
+                    )
+                    n2.connect(n)
+                    lastInputNode.connect(n2)
+                    if (term[k] === '0') {
+                        lastInputNodes[k][0] = n2
+                    } else {
+                        lastInputNodes[k][1] = n2
+                    }
+
+                    break
+                }
+                counter++
+                output.push(n)
+                continue
+            }
+            let andGate = new AndGate(
+                InputStartX + 20,
+                InputStartY + 100 + counter++ * 80 + i * 30,
+                globalScope,
+                'RIGHT',
+                count
+            )
+            output.push(andGate)
+            for (let j = 0, j_and = 0; j < term.length; j++) {
+                if (term[j] === '-') continue
+                let lastInputNode
+                if (term[j] === '0') {
+                    lastInputNode = lastInputNodes[j][0]
+                } else {
+                    lastInputNode = lastInputNodes[j][1]
+                }
+                console.log(lastInputNode)
+                let x = 0,
+                    y = 0
+                if (lastInputNode.parent.x === 0) {
+                    x = lastInputNode.x
+                } else {
+                    x = lastInputNode.parent.x
+                }
+                let n = new Node(
+                    x,
+                    andGate.inp[j_and].parent.y + andGate.inp[j_and].y,
+                    2,
+                    globalScope.root
+                )
+                andGate.inp[j_and].connect(n)
+                lastInputNode.connect(n)
+                if (term[j] === '0') {
+                    lastInputNodes[j][0] = n
+                } else {
+                    lastInputNodes[j][1] = n
+                }
+                j_and++
+            }
         }
-        
-        
-        for (let i = 0; i < term.length; i++) {
-            new Node(
-                //@ts-ignore
-                lastInputNodes[i][parseInt(term[i])].x,
-                lastInputNodes[i][parseInt(term[i])].y + 30
-            ).connect(lastInputNodes[i][parseInt(term[i])])
+        allOutputs.push(output)
+        console.log(allOutputs)
+    }
+    InputStartX += 150
+    for (let output of allOutputs) {
+        let y = output[Math.floor(output.length / 2)].y
+        let x = InputStartX
+        if (output.length === 1) {
+            if (output[0] instanceof AndGate) {
+                const n = new Node(
+                    output[0].x,
+                    output[0].y,
+                    2,
+                    globalScope.root
+                )
+                new Output(
+                    output[0].x,
+                    output[0].y,
+                    globalScope,
+                    'LEFT'
+                ).inp1.connect(n)
+                output[0].output1.connect(n)
+            } else {
+                output[0].x = x
+                new Output(
+                    output[0].x + 10,
+                    output[0].y,
+                    globalScope,
+                    'LEFT'
+                ).inp1.connect(output[0])
+            }
+            continue
+        }
+
+        console.log('HAHAHA', output[Math.floor(output.length / 2)])
+        let orGate = new OrGate(x, y, globalScope, 'RIGHT', output.length)
+        let o = new Output(orGate.x + 100, orGate.y, globalScope, 'LEFT')
+        o.inp1.connect(orGate.output1)
+        for (let k = 0; k < output.length; k++) {
+            if (output[k] instanceof AndGate) {
+                output[k].output1.connect(orGate.inp[k])
+            } else if (output[k] instanceof Node) {
+                output[k].connect(orGate.inp[k])
+            }
         }
     }
 }
