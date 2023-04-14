@@ -43,6 +43,8 @@ import Output from '#/simulator/src/modules/Output'
 import AndGate from '#/simulator/src/modules/AndGate'
 import OrGate from '#/simulator/src/modules/OrGate'
 import NotGate from '#/simulator/src/modules/NotGate'
+import DflipFlop from '#/simulator/src/sequential/DflipFlop'
+import Clock from '#/simulator/src/sequential/Clock'
 import simulationArea from '#/simulator/src/simulationArea'
 import { findDimensions } from '#/simulator/src/canvasApi'
 import { expr } from 'jquery'
@@ -752,55 +754,65 @@ window.drawCircuit = (finiteAutomata) => {
         )
     }
 
-    let inputs = []
-
     let lastInputNodes = []
+    let flipFlops = []
 
     let InputStartX = -500
     let InputStartY = -500
-    for (let i = 0; i < numVarArgs; i++) {
-        inputs.push(new Input(InputStartX, InputStartY))
-        inputs[i].newDirection('DOWN')
-        const n1 = new Node(InputStartX, InputStartY + 30, 2, globalScope.root)
-        inputs[i].output1.connect(n1)
-        // const n2 = new Node(
-        //     InputStartX,
-        //     InputStartY + 20 + 200,
-        //     2,
-        //     globalScope.root
-        // // )
-        // n2.connect(n1)
-        let n3 = new Node(
-            InputStartX + 30,
-            InputStartY + 30,
-            2,
-            globalScope.root
-        )
-        n3.connect(n1)
-        let n4 = new Node(
-            InputStartX + 30,
-            InputStartY + 30 + 20,
-            2,
-            globalScope.root
-        )
-        n4.connect(n3)
-        let notGate = new NotGate(
-            InputStartX + 30,
-            InputStartY + 30 + 30,
-            globalScope,
-            'DOWN'
-        )
 
-        // let n5 = new Node(
-        //     InputStartX + 30,
-        //     InputStartY + 30 + 30 + 160,
-        //     2,
-        //     globalScope.root
-        // )
-        // n5.connect(notGate.output1)
-        notGate.inp1.connect(n4)
-        lastInputNodes[i] = [notGate.output1, n1]
-        InputStartX = InputStartX + 100
+    let clock = new Clock(
+        InputStartX - 50,
+        InputStartY - 30,
+        globalScope,
+        'RIGHT'
+    )
+
+    for (let i = 0; i < numVarArgs; i++) {
+        if (i < numVarArgs - outputBitsMinterms.length) {
+            let flipFlop = new DflipFlop(
+                InputStartX,
+                InputStartY,
+                globalScope,
+                'DOWN'
+            )
+            lastInputNodes[i] = [flipFlop.qInvOutput, flipFlop.qOutput]
+            flipFlops.push(flipFlop)
+        } else {
+            let input = new Input(InputStartX, InputStartY + 10)
+            input.newDirection('DOWN')
+
+            let n1 = new Node(
+                InputStartX,
+                InputStartY + 30,
+                2,
+                globalScope.root
+            )
+            input.output1.connect(n1)
+            let n3 = new Node(
+                InputStartX + 30,
+                InputStartY + 30,
+                2,
+                globalScope.root
+            )
+            n3.connect(n1)
+            let n4 = new Node(
+                InputStartX + 30,
+                InputStartY + 50,
+                2,
+                globalScope.root
+            )
+            n4.connect(n3)
+            let notGate = new NotGate(
+                InputStartX + 30,
+                InputStartY + 60,
+                globalScope,
+                'DOWN'
+            )
+            notGate.inp1.connect(n4)
+            lastInputNodes[i] = [notGate.output1, n1]
+        }
+
+        InputStartX += 100
     }
     console.log(newStateMinimizedExpressions)
     let allMinimizedExpressions = [
@@ -830,6 +842,7 @@ window.drawCircuit = (finiteAutomata) => {
 
                 for (let k = 0; k < term.length; k++) {
                     if (term[k] === '-') continue
+                    // let lastInputNode = lastInputNodes[k][parseInt(term[k])]
                     let lastInputNode
                     if (term[k] === '0') {
                         lastInputNode = lastInputNodes[k][0]
@@ -879,16 +892,9 @@ window.drawCircuit = (finiteAutomata) => {
                 } else {
                     lastInputNode = lastInputNodes[j][1]
                 }
-                console.log(lastInputNode)
-                let x = 0,
-                    y = 0
-                if (lastInputNode.parent.x === 0) {
-                    x = lastInputNode.x
-                } else {
-                    x = lastInputNode.parent.x
-                }
+                let y = 0
                 let n = new Node(
-                    x,
+                    lastInputNode.parent.x + lastInputNode.x,
                     andGate.inp[j_and].parent.y + andGate.inp[j_and].y,
                     2,
                     globalScope.root
@@ -906,48 +912,69 @@ window.drawCircuit = (finiteAutomata) => {
         allOutputs.push(output)
         console.log(allOutputs)
     }
-    InputStartX += 150
-    for (let output of allOutputs) {
-        let y = output[Math.floor(output.length / 2)].y
+    InputStartX += 100
+    for (let i = 0; i < allOutputs.length; i++) {
+        let output = allOutputs[i]
+
         let x = InputStartX
+        let y = output.reduce((sum, { y }) => sum + y, 0) / output.length
+
+        let outputNode
+        console.log('length', output.length)
         if (output.length === 1) {
-            if (output[0] instanceof AndGate) {
-                const n = new Node(
-                    output[0].x+50,
-                    output[0].y,
-                    2,
-                    globalScope.root
-                )
-                new Output(
-                    output[0].x+60,
-                    output[0].y,
-                    globalScope,
-                    'LEFT'
-                ).inp1.connect(n)
-                output[0].output1.connect(n)
-            } else {
-                output[0].x = x
-                new Output(
-                    output[0].x + 10,
-                    output[0].y,
-                    globalScope,
-                    'LEFT'
-                ).inp1.connect(output[0])
-            }
-            continue
+            let node = output[0]
+            if (node instanceof AndGate)
+                outputNode = new Node(node.x, node.y, 2, globalScope.root)
+            else outputNode = node
+        } else {
+            let orGate = new OrGate(x, y, globalScope, 'RIGHT', output.length)
+
+            outputNode = new Node(orGate.x + 100, orGate.y, 2, globalScope.root)
+            outputNode.connect(orGate.output1)
+
+            for (let k = 0; k < output.length; k++)
+                if (output[k] instanceof AndGate)
+                    orGate.inp[k].connect(output[k].output1)
+                else orGate.inp[k].connect(output[k])
         }
 
-        console.log('HAHAHA', output[Math.floor(output.length / 2)])
-        let orGate = new OrGate(x, y, globalScope, 'RIGHT', output.length)
-        let o = new Output(orGate.x + 100, orGate.y, globalScope, 'LEFT')
-        o.inp1.connect(orGate.output1)
-        for (let k = 0; k < output.length; k++) {
-            if (output[k] instanceof AndGate) {
-                output[k].output1.connect(orGate.inp[k])
-            } else if (output[k] instanceof Node) {
-                output[k].connect(orGate.inp[k])
-            }
+        if (i < flipFlops.length) {
+            outputNode.x = x + 100 + i * 10
+
+            let bridgeNode = new Node(
+                outputNode.x,
+                flipFlops[i].y + flipFlops[i].dInp.y - 20 - 10 * i,
+                2,
+                globalScope.root
+            )
+            outputNode.connect(bridgeNode)
+
+            let flipFlopNode = new Node(
+                flipFlops[i].x + flipFlops[i].dInp.x,
+                bridgeNode.y,
+                2,
+                globalScope.root
+            )
+            bridgeNode.connect(flipFlopNode)
+            flipFlopNode.connect(flipFlops[i].dInp)
+        } else {
+            new Output(x + 110, y, globalScope, 'LEFT').inp1.connect(outputNode)
         }
+
+        outputNode.update()
+    }
+
+    let clockNode = clock.output1
+    for (let flipFlop of flipFlops) {
+        let bridgeNode = new Node(
+            flipFlop.x + flipFlop.clockInp.x,
+            clock.y,
+            2,
+            globalScope.root
+        )
+        bridgeNode.connect(flipFlop.clockInp)
+        clockNode.connect(bridgeNode)
+        clockNode = bridgeNode
     }
 }
 </script>
