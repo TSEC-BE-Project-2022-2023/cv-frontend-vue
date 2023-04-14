@@ -913,13 +913,13 @@ window.drawCircuit = (finiteAutomata) => {
         if (output.length === 1) {
             if (output[0] instanceof AndGate) {
                 const n = new Node(
-                    output[0].x,
+                    output[0].x+50,
                     output[0].y,
                     2,
                     globalScope.root
                 )
                 new Output(
-                    output[0].x,
+                    output[0].x+60,
                     output[0].y,
                     globalScope,
                     'LEFT'
