@@ -20,6 +20,14 @@
 </template>
 
 <script lang="ts" setup>
+import {
+    BitSet,
+    FiniteAutomataState,
+    FiniteAutomata,
+} from '../../simulator/src/fsm_simulator/FiniteAutomata'
+
+import { validateFiniteAutomata } from '../../simulator/src/fsm_simulator/validate'
+
 import { stripTags } from '#/simulator/src/utils'
 import { useState } from '#/store/SimulatorStore/state'
 import messageBox from '@/MessageBox/messageBox.vue'
@@ -703,6 +711,111 @@ function printBooleanTable() {
     win.document.write(htmlBody)
     win.document.close()
     win.print()
+}
+
+// const input = [
+//     ['State', 0, 1],
+//     ['A', 'A', 'C'],
+//     ['C', 'A', 'C'],
+// ]
+
+//@ts-ignore
+window.drawCircuit = (finiteAutomata) => {
+    const { outputBitsMinterms, newStateBitsMinterms } =
+        finiteAutomata.generateMinTermSets()
+    let numVarArgs = 0
+    let newStateMinimizedExpressions = []
+    let outputStateMinimizedExpressions = []
+    for (let i = 0; i < newStateBitsMinterms.length; i++) {
+        let set = newStateBitsMinterms[i]
+        let minTermsArg = []
+        for (let s of set) {
+            numVarArgs = s.length
+            minTermsArg.push(s.value)
+        }
+        newStateMinimizedExpressions.push(
+            new BooleanMinimize(numVarArgs, minTermsArg).solve()
+        )
+    }
+
+    for (let i = 0; i < outputBitsMinterms.length; i++) {
+        let set = outputBitsMinterms[i]
+        let numVarArgs = 0
+        let minTermsArg = []
+        for (let s of set) {
+            numVarArgs = s.length
+            minTermsArg.push(s.value)
+        }
+        outputStateMinimizedExpressions.push(
+            new BooleanMinimize(numVarArgs, minTermsArg).solve()
+        )
+    }
+
+    let inputs = []
+    let lastInputNodes = []
+
+    let InputStartX = 100
+    let InputStartY = 100
+    for (let i = 0; i < numVarArgs; i++) {
+        inputs.push(new Input(InputStartX, InputStartY))
+        inputs[i].newDirection('DOWN')
+        const n1 = new Node(InputStartX, InputStartY + 30, 2, globalScope.root)
+        inputs[i].output1.connect(n1)
+        // const n2 = new Node(
+        //     InputStartX,
+        //     InputStartY + 20 + 200,
+        //     2,
+        //     globalScope.root
+        // // )
+        // n2.connect(n1)
+        let n3 = new Node(
+            InputStartX + 30,
+            InputStartY + 30,
+            2,
+            globalScope.root
+        )
+        n3.connect(n1)
+        let n4 = new Node(
+            InputStartX + 30,
+            InputStartY + 30 + 20,
+            2,
+            globalScope.root
+        )
+        n4.connect(n3)
+        let notGate = new NotGate(
+            InputStartX + 30,
+            InputStartY + 30 + 30,
+            globalScope,
+            'DOWN'
+        )
+
+        // let n5 = new Node(
+        //     InputStartX + 30,
+        //     InputStartY + 30 + 30 + 160,
+        //     2,
+        //     globalScope.root
+        // )
+        // n5.connect(notGate.output1)
+        notGate.inp1.connect(n4)
+        lastInputNodes[i] = [notGate.output1, n1]
+        InputStartX = InputStartX + 100
+    }
+    for (let j = 0; j < newStateMinimizedExpressions.length; j++) {
+        let term = newStateMinimizedExpressions[j].split('')
+        let termCount = term.reduce((c, e) => (e === '-' ? c : c + 1), 0)
+        if(termCount === 1) {
+            continue;
+        }
+        
+        
+        for (let i = 0; i < term.length; i++) {
+            new Node(
+                //@ts-ignore
+                lastInputNodes[i][parseInt(term[i])].x,
+                lastInputNodes[i][parseInt(term[i])].y + 30
+            ).connect(lastInputNodes[i][parseInt(term[i])])
+        }
+    }
 }
 </script>
 

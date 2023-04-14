@@ -9,6 +9,77 @@ import {
     FiniteAutomata,
 } from './fsm_simulator/FiniteAutomata'
 
+
+import { validateFiniteAutomata } from './fsm_simulator/validate'
+
+import BooleanMinimize from './quinMcCluskey'
+import Input from './modules/Input'
+import Node from './node'
+
+let drawCircuit = (finiteAutomata) => {
+    return window.drawCircuit(finiteAutomata)
+    const { outputBitsMinterms, newStateBitsMinterms } =
+        finiteAutomata.generateMinTermSets()
+    let numVarArgs = 0
+    let newStateMinimizedExpressions = []
+    let outputStateMinimizedExpressions = []
+    for (let i = 0; i < newStateBitsMinterms.length; i++) {
+        let set = newStateBitsMinterms[i]
+        let minTermsArg = []
+        for (let s of set) {
+            numVarArgs = s.length
+            minTermsArg.push(s.value)
+        }
+        newStateMinimizedExpressions.push(
+            new BooleanMinimize(numVarArgs, minTermsArg).solve()
+        )
+    }
+
+    for (let i = 0; i < outputBitsMinterms.length; i++) {
+        let set = outputBitsMinterms[i]
+        let numVarArgs = 0
+        let minTermsArg = []
+        for (let s of set) {
+            numVarArgs = s.length
+            minTermsArg.push(s.value)
+        }
+        outputStateMinimizedExpressions.push(
+            new BooleanMinimize(numVarArgs, minTermsArg).solve()
+        )
+    }
+
+    let inputs = []
+    let InputStartX = 100
+    let InputStartY = 100
+    for (let i = 0; i < numVarArgs; i++) {
+        inputs.push(new Input(InputStartX, InputStartY))
+        inputs[i].newDirection('DOWN')
+        const n1 = new Node(InputStartX, InputStartY + 30, 2, globalScope.root)
+        inputs[i].output1.connect(n1)
+        const n2 = new Node(
+            InputStartX,
+            InputStartY + 20 + 200,
+            2,
+            globalScope.root
+        )
+        n2.connect(n1)
+        let n3 = new Node(
+            InputStartX + 30,
+            InputStartY + 30,
+            2,
+            globalScope.root
+        )
+        n3.connect(n1)
+        let n4 = new Node(
+            InputStartX + 30,
+            InputStartY + 30 + 20,
+            2,
+            globalScope.root
+        )
+        n4.connect(n3)
+        InputStartX = InputStartX + 100
+    }
+}
 export default function generateCircuit() {
     const states = globalScope.State
     console.log("states:", states)
