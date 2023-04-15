@@ -44,7 +44,7 @@ export const circuitProperty = {
     toggleLayoutMode,
     setProjectName,
     changeCircuitName,
-    // changeClockTime,
+    changeClockTime: (value) => changeClockTime(value),
     deleteCurrentCircuit,
     changeClockEnable,
     changeInputSize,
