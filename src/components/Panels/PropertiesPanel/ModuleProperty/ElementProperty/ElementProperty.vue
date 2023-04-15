@@ -130,21 +130,21 @@
         </p>
         <div v-if="value.type === 'table'">
             <span>{{ value.name }}</span>
-            <table class="objectPropertyAttribute">
+            <table style="margin: 10px 0px; min-width: 150px;" class="objectPropertyAttribute">
                 {{
                     void (table = obj[value.func]())
                 }}
                 <thead>
-                    <tr>
-                        <th v-for="header in table[0]" :key="header">
+                    <tr style="text-align: left; font-weight: bold;">
+                        <th v-for="header in table[0]" :key="header" style="padding: 5px 0px;">
                             {{ header }}
                         </th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    <tr v-for="row in table.slice(1)" :key="row">
-                        <td v-for="cell in row" :key="cell">
+                    <tr v-for="row in table.slice(1)" :key="row" style="text-align: left;">
+                        <td v-for="cell in row" :key="cell" style="padding: 5px 0px; text-align: left;">
                             {{ cell }}
                         </td>
                     </tr>
