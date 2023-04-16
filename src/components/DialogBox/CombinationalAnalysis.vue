@@ -924,7 +924,7 @@ window.drawCircuit = (finiteAutomata) => {
         if (output.length === 1) {
             let node = output[0]
             if (node instanceof AndGate)
-                outputNode = new Node(node.x, node.y, 2, globalScope.root)
+                outputNode = new Node(node.x + node.output1.x, node.y, 2, globalScope.root)
             else outputNode = node
         } else {
             let orGate = new OrGate(x, y, globalScope, 'RIGHT', output.length)
