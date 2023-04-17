@@ -92,7 +92,7 @@ export default function generateCircuit() {
         alert('Tag a state with initial')
         return
     }
-    const stateTransitionTable = initialState.getTransitionTable()
+    const { table: stateTransitionTable } = initialState.getTransitionTable()
     for (let i = 1; i < stateTransitionTable[0].length; i++) {
         stateTransitionTable[0][i] = Number(stateTransitionTable[0][i])
     }

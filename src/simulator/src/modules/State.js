@@ -150,11 +150,11 @@ export default class State extends CircuitElement {
             stateTransitionMap[from].push([transition, to])
         }
 
-        let visitedSet = new Set()
+        let stateMap = new Map()
         let currentStates = [this]
         while (currentStates.length > 0) {
             let fromState = currentStates.shift()
-            visitedSet.add(fromState.label)
+            stateMap.set(fromState.label, fromState)
             for (let n of fromState.nodeList) {
                 let { state, transition } = findOtherEndOfWire(
                     n,
@@ -162,7 +162,7 @@ export default class State extends CircuitElement {
                 )
                 if (!state) continue
 
-                if (!visitedSet.has(state.label)) currentStates.push(state)
+                if (!stateMap.has(state.label)) currentStates.push(state)
                 addTransition(fromState.label, state.label, transition)
             }
         }
@@ -170,7 +170,13 @@ export default class State extends CircuitElement {
         let orderedInputs = Array.from(inputSet).sort()
         let stateTable = []
         let stateTransitionMapEntries = Object.entries(stateTransitionMap).sort(
-            ([a], [b]) => a.localeCompare(b)
+            ([a], [b]) => {
+                let isInitialA = stateMap.get(a).isInitial
+                let isInitialB = stateMap.get(b).isInitial
+                if (isInitialA && !isInitialB) return -1
+                else if (!isInitialA && isInitialB) return 1
+                else a.localeCompare(b)
+            }
         )
         for (let [state, transitions] of stateTransitionMapEntries) {
             let row = [state]
@@ -179,7 +185,29 @@ export default class State extends CircuitElement {
             stateTable.push(row)
         }
 
-        return [['State', ...orderedInputs], ...stateTable]
+        let table = [['State', ...orderedInputs], ...stateTable]
+
+        return { table, stateMap }
+    }
+
+    getTransitionTableView() {
+        let { table, stateMap } = this.getTransitionTable()
+
+        // add output column
+        table[0].push('Output')
+        // change state labels for initial and final states
+        for (let i = 1; i < table.length; i++) {
+            let { label, output, isInitial, isFinal } = stateMap.get(
+                table[i][0]
+            )
+            if (isInitial) label = '>' + label
+            if (isFinal) label = label + '*'
+            table[i][0] = label
+            // add state output to output column
+            table[i].push(output)
+        }
+
+        return table
     }
 }
 
@@ -235,7 +263,7 @@ State.prototype.mutableProperties = {
     transitionTable: {
         name: 'Transition Table',
         type: 'table',
-        func: 'getTransitionTable',
+        func: 'getTransitionTableView',
     },
 }
 State.prototype.propagationDelayFixed = true
