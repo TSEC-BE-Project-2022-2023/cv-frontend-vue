@@ -27,7 +27,7 @@ export default class FAWire {
         this.fixedBitWidth = true
 
         this.updateData()
-        this.scope.wires.push(this)
+        this.scope.faWires.push(this)
         forceResetNodesSet(true)
     }
 
@@ -255,7 +255,7 @@ export default class FAWire {
         updateSimulationSet(true)
         this.node1.connections.clean(this.node2)
         this.node2.connections.clean(this.node1)
-        this.scope.wires.clean(this)
+        this.scope.faWires.clean(this)
         this.node1.checkDeleted()
         this.node2.checkDeleted()
     }

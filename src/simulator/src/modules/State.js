@@ -36,7 +36,7 @@ function toBaseAZ(n) {
 let globalStateCounter = 0
 
 export default class State extends CircuitElement {
-    constructor(x, y, scope = globalScope, dir = 'RIGHT', bitWidth = 1) {
+    constructor(x, y, scope = globalScope, dir = 'RIGHT', bitWidth = 1, label) {
         super(x, y, scope, dir, bitWidth)
         /* this is done in this.baseSetup() now
         this.scope['State'].push(this);
@@ -50,7 +50,7 @@ export default class State extends CircuitElement {
         this.isFinal = false
         this.output = ''
 
-        this.label = toBaseAZ(globalStateCounter++)
+        this.label = label ?? toBaseAZ(globalStateCounter++)
         this.labelDirection = 'UP'
         this.inp1 = new FANode(-10, 0, 0, this, this.bitWidth, 'c0')
         this.output1 = new FANode(20, 0, 1, this, this.bitWidth, 'c1')
@@ -63,8 +63,8 @@ export default class State extends CircuitElement {
      */
     customSave() {
         const data = {
-            constructorParamaters: [this.direction, this.bitWidth],
-            nodes: {
+            constructorParamaters: [this.direction, this.bitWidth, this.label],
+            faNodes: {
                 output1: findNode(this.output1),
                 inp1: findNode(this.inp1),
             },
@@ -158,7 +158,7 @@ export default class State extends CircuitElement {
             for (let n of fromState.nodeList) {
                 let { state, transition } = findOtherEndOfWire(
                     n,
-                    this.scope.wires
+                    this.scope.faWires
                 )
                 if (!state) continue
 

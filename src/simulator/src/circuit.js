@@ -301,6 +301,10 @@ export default class Scope {
         this.allNodes = []
         this.wires = []
 
+        this.faNodes = [] // intermediate fa nodes only
+        this.allFaNodes = []
+        this.faWires = []
+
         // Creating arrays for other module elements
         for (let i = 0; i < moduleList.length; i++) {
             this[moduleList[i]] = []
@@ -313,6 +317,9 @@ export default class Scope {
     reset() {
         for (let i = 0; i < this.allNodes.length; i++) {
             this.allNodes[i].reset()
+        }
+        for (let i = 0; i < this.allFaNodes.length; i++) {
+            this.allFaNodes[i].reset()
         }
         for (let i = 0; i < this.Splitter.length; i++) {
             this.Splitter[i].reset()

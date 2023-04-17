@@ -116,8 +116,16 @@ function setupElementLists() {
         ...circuitElementList,
         'nodes',
         ...annotationList,
+        'faWires',
+        'faNodes',
     ] // Order of update
-    window.renderOrder = [...moduleList.slice().reverse(), 'wires', 'allNodes'] // Order of render
+    window.renderOrder = [
+        ...moduleList.slice().reverse(),
+        'wires',
+        'allNodes',
+        'faWires',
+        'allFaNodes',
+    ] // Order of render
 }
 
 /**

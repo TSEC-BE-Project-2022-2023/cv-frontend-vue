@@ -24,9 +24,11 @@ import { colors } from './themer/themer'
 export function constructNodeConnections(node, data) {
     for (var i = 0; i < data.connections.length; i++) {
         if (
-            !node.connections.contains(node.scope.allNodes[data.connections[i]])
+            !node.connections.contains(
+                node.scope.allFaNodes[data.connections[i]]
+            )
         )
-            node.connect(node.scope.allNodes[data.connections[i]])
+            node.connect(node.scope.allFaNodes[data.connections[i]])
     }
 }
 
@@ -44,7 +46,7 @@ export function replace(node, index) {
     var { parent } = node
     parent.nodeList.clean(node)
     node.delete()
-    node = scope.allNodes[index]
+    node = scope.allFaNodes[index]
     node.parent = parent
     parent.nodeList.push(node)
     node.updateRotation()
@@ -84,7 +86,7 @@ export function dec2bin(dec, bitWidth = undefined) {
  * @category node
  */
 export function findNode(x) {
-    return x.scope.allNodes.indexOf(x)
+    return x.scope.allFaNodes.indexOf(x)
 }
 
 /**
@@ -112,7 +114,7 @@ export function loadNode(data, scope) {
  * @category node
  */
 function extractNode(x, scope, parent) {
-    var n = scope.allNodes[x]
+    var n = scope.allFaNodes[x]
     n.parent = parent
     return n
 }
@@ -202,10 +204,10 @@ export default class Node {
         this.refresh()
 
         if (this.type == 2) {
-            this.parent.scope.nodes.push(this)
+            this.parent.scope.faNodes.push(this)
         }
 
-        this.parent.scope.allNodes.push(this)
+        this.parent.scope.allFaNodes.push(this)
 
         this.queueProperties = {
             inQueue: false,
@@ -230,7 +232,7 @@ export default class Node {
         this.x = this.absX()
         this.y = this.absY()
         this.parent = this.scope.root
-        this.scope.nodes.push(this)
+        this.scope.faNodes.push(this)
     }
 
     /**
@@ -834,21 +836,21 @@ export default class Node {
             }
 
             if (flag == 1) {
-                for (var i = 0; i < this.parent.scope.allNodes.length; i++) {
+                for (var i = 0; i < this.parent.scope.allFaNodes.length; i++) {
                     if (
-                        x1 == this.parent.scope.allNodes[i].absX() &&
-                        y1 == this.parent.scope.allNodes[i].absY()
+                        x1 == this.parent.scope.allFaNodes[i].absX() &&
+                        y1 == this.parent.scope.allFaNodes[i].absY()
                     ) {
-                        n1 = this.parent.scope.allNodes[i]
+                        n1 = this.parent.scope.allFaNodes[i]
                         break
                     }
                 }
 
                 if (n1 == undefined) {
                     n1 = new Node(x1, y1, 2, this.scope.root)
-                    for (var i = 0; i < this.parent.scope.wires.length; i++) {
-                        if (this.parent.scope.wires[i].checkConvergence(n1)) {
-                            this.parent.scope.wires[i].converge(n1)
+                    for (var i = 0; i < this.parent.scope.faWires.length; i++) {
+                        if (this.parent.scope.faWires[i].checkConvergence(n1)) {
+                            this.parent.scope.faWires[i].converge(n1)
                             break
                         }
                     }
@@ -856,21 +858,21 @@ export default class Node {
                 this.connect(n1)
             }
 
-            for (var i = 0; i < this.parent.scope.allNodes.length; i++) {
+            for (var i = 0; i < this.parent.scope.allFaNodes.length; i++) {
                 if (
-                    x2 == this.parent.scope.allNodes[i].absX() &&
-                    y2 == this.parent.scope.allNodes[i].absY()
+                    x2 == this.parent.scope.allFaNodes[i].absX() &&
+                    y2 == this.parent.scope.allFaNodes[i].absY()
                 ) {
-                    n2 = this.parent.scope.allNodes[i]
+                    n2 = this.parent.scope.allFaNodes[i]
                     break
                 }
             }
 
             if (n2 == undefined) {
                 n2 = new Node(x2, y2, 2, this.scope.root)
-                for (var i = 0; i < this.parent.scope.wires.length; i++) {
-                    if (this.parent.scope.wires[i].checkConvergence(n2)) {
-                        this.parent.scope.wires[i].converge(n2)
+                for (var i = 0; i < this.parent.scope.faWires.length; i++) {
+                    if (this.parent.scope.faWires[i].checkConvergence(n2)) {
+                        this.parent.scope.faWires[i].converge(n2)
                         break
                     }
                 }
@@ -900,8 +902,8 @@ export default class Node {
     delete() {
         updateSimulationSet(true)
         this.deleted = true
-        this.parent.scope.allNodes.clean(this)
-        this.parent.scope.nodes.clean(this)
+        this.parent.scope.allFaNodes.clean(this)
+        this.parent.scope.faNodes.clean(this)
 
         this.parent.scope.root.nodeList.clean(this) // Hope this works! - Can cause bugs
 
@@ -940,13 +942,13 @@ export default class Node {
         var y = this.absY()
         var n
 
-        for (var i = 0; i < this.parent.scope.allNodes.length; i++) {
+        for (var i = 0; i < this.parent.scope.allFaNodes.length; i++) {
             if (
-                this != this.parent.scope.allNodes[i] &&
-                x == this.parent.scope.allNodes[i].absX() &&
-                y == this.parent.scope.allNodes[i].absY()
+                this != this.parent.scope.allFaNodes[i] &&
+                x == this.parent.scope.allFaNodes[i].absX() &&
+                y == this.parent.scope.allFaNodes[i].absY()
             ) {
-                n = this.parent.scope.allNodes[i]
+                n = this.parent.scope.allFaNodes[i]
                 if (this.type == 2) {
                     for (var j = 0; j < this.connections.length; j++) {
                         n.connect(this.connections[j])
@@ -961,8 +963,8 @@ export default class Node {
         }
 
         if (n == undefined) {
-            for (var i = 0; i < this.parent.scope.wires.length; i++) {
-                if (this.parent.scope.wires[i].checkConvergence(this)) {
+            for (var i = 0; i < this.parent.scope.faWires.length; i++) {
+                if (this.parent.scope.faWires[i].checkConvergence(this)) {
                     var n = this
                     if (this.type != 2) {
                         n = new Node(
@@ -973,7 +975,7 @@ export default class Node {
                         )
                         this.connect(n)
                     }
-                    this.parent.scope.wires[i].converge(n)
+                    this.parent.scope.faWires[i].converge(n)
                     break
                 }
             }

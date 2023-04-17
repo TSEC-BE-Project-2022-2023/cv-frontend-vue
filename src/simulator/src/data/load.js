@@ -14,6 +14,7 @@ import { loadSubCircuit } from '../subcircuit'
 import { scheduleBackup } from './backupCircuit'
 import { showProperties } from '../ux'
 import { constructNodeConnections, loadNode, replace } from '../node'
+import * as faNode from '../faNode'
 import { generateId } from '../utils'
 import modules from '../modules'
 import { oppositeDirection } from '../canvasApi'
@@ -76,6 +77,20 @@ function loadModule(data, scope) {
             }
         }
     }
+
+    // Replace new fa nodes with the correct old fa nodes (with connections)
+    if (data.customData.faNodes) {
+        for (const node in data.customData.faNodes) {
+            const n = data.customData.faNodes[node]
+            if (n instanceof Array) {
+                for (let i = 0; i < n.length; i++) {
+                    obj[node][i] = faNode.replace(obj[node][i], n[i])
+                }
+            } else {
+                obj[node] = faNode.replace(obj[node], n)
+            }
+        }
+    }
     if (data.subcircuitMetadata)
         obj.subcircuitMetadata = data['subcircuitMetadata']
 }
@@ -118,6 +133,15 @@ export function loadScope(scope, data) {
     for (let i = 0; i < data.allNodes.length; i++) {
         constructNodeConnections(scope.allNodes[i], data.allNodes[i])
     }
+
+    // Load all fa nodes
+    data.allFaNodes.map((x) => faNode.loadNode(x, scope))
+
+    // Make all fa connections
+    for (let i = 0; i < data.allFaNodes.length; i++) {
+        faNode.constructNodeConnections(scope.allFaNodes[i], data.allFaNodes[i])
+    }
+
     // Load all modules
     for (let i = 0; i < ML.length; i++) {
         if (data[ML[i]]) {

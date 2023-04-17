@@ -36,6 +36,9 @@ export function backUp(scope = globalScope) {
     // Storing all nodes
     data.allNodes = scope.allNodes.map(extract)
 
+    // Storing all faNodes
+    data.allFaNodes = scope.allFaNodes.map(extract)
+
     // Storing test attached to scope
     data.testbenchData = scope.testbenchData
 
@@ -57,6 +60,12 @@ export function backUp(scope = globalScope) {
     data.nodes = []
     for (let i = 0; i < scope.nodes.length; i++) {
         data.nodes.push(scope.allNodes.indexOf(scope.nodes[i]))
+    }
+
+    // Storing intermediate faNodes (faNodes in faWires)
+    data.faNodes = []
+    for (let i = 0; i < scope.faNodes.length; i++) {
+        data.faNodes.push(scope.allFaNodes.indexOf(scope.faNodes[i]))
     }
 
     // Restoring the connections
