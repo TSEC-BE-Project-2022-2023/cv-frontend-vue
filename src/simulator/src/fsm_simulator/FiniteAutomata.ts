@@ -126,77 +126,122 @@ export class FiniteAutomata {
     }
 
     formatTruthTable(): void {
-        const truthTableData = this.generateCombinedTruthTable()
-
-        const tempRow = truthTableData[0]
-        let str = 'b'
-        for (let i = 1; i < tempRow.length; ) {
-            let len = tempRow[i].length
-            for (let j = len - 1; j >= 0; j--) {
-                process.stdout.write(`${str}${j}\t`)
+        let tableData: any = []
+        const combinedTruthTable = this.generateCombinedTruthTable()
+        const numRows = combinedTruthTable.length
+        let b_count = combinedTruthTable[0][1].length
+        let input_count = combinedTruthTable[0][0].length
+        let output_count = combinedTruthTable[0][2].length
+        for (let i = 0; i < numRows; i++) {
+            tableData[i] = {}
+            for (let j = b_count - 1; j >= 0; j--) {
+                tableData[i][`b${j}`] = combinedTruthTable[i][1].getBitAt(j)
             }
-            if (i % 2 != 0) {
-                i -= 1
-                if (i == 0) str = 'input'
-                else str = 'output'
-            } else {
-                i += 3
-                str = 'b'
+            for (let j = input_count - 1; j >= 0; j--) {
+                tableData[i][`inp${j}`] = combinedTruthTable[i][0].getBitAt(j)
+            }
+            for (let j = b_count - 1; j >= 0; j--) {
+                tableData[i][`b_new${j}`] = combinedTruthTable[i][3].getBitAt(j)
+            }
+            for (let j = output_count - 1; j >= 0; j--) {
+                tableData[i][`out${j}`] = combinedTruthTable[i][2].getBitAt(j)
             }
         }
-        process.stdout.write(`\n`)
+        console.table(tableData)
 
-        for (let row of truthTableData) {
-            for (let i = 1; i < 4; ) {
-                let len = row[i].length
-                for (let j = len - 1; j >= 0; j--) {
-                    process.stdout.write(`${row[i].getBitAt(j)}\t`)
-                }
-                if (i % 2 != 0) {
-                    i -= 1
-                } else {
-                    i += 3
-                }
-            }
-            process.stdout.write(`\n`)
-        }
+        // const truthTableData = this.generateCombinedTruthTable()
+
+        // const tempRow = truthTableData[0]
+        // let str = 'b'
+        // for (let i = 1; i < tempRow.length; ) {
+        //     let len = tempRow[i].length
+        //     for (let j = len - 1; j >= 0; j--) {
+        //         process.stdout.write(`${str}${j}\t`)
+        //     }
+        //     if (i % 2 != 0) {
+        //         i -= 1
+        //         if (i == 0) str = 'input'
+        //         else str = 'output'
+        //     } else {
+        //         i += 3
+        //         str = 'b'
+        //     }
+        // }
+        // process.stdout.write(`\n`)
+
+        // for (let row of truthTableData) {
+        //     for (let i = 1; i < 4; ) {
+        //         let len = row[i].length
+        //         for (let j = len - 1; j >= 0; j--) {
+        //             process.stdout.write(`${row[i].getBitAt(j)}\t`)
+        //         }
+        //         if (i % 2 != 0) {
+        //             i -= 1
+        //         } else {
+        //             i += 3
+        //         }
+        //     }
+        //     process.stdout.write(`\n`)
+        // }
     }
 
     drawStateTransitionTable(): void {
-        // console.log(this.states);
+        const tableData: any = []
         const states = this.states
-        let bitSets = this.alphabet
-        // console.log(bitSets);
-        let header = '|State/Input\t'
-        const orders: BitSet[] = []
-        for (let bit of bitSets) {
-            orders.push(bit)
-            header += `|${bit.toString()}\t`
-        }
-        header += '|'
-
-        let dash = '----'
-        for (let head of header) {
-            if (dash)
-                if (head === '\t') {
-                    dash += '---'
-                }
-            dash += '-'
-        }
-
-        console.log(dash)
-        console.log(header)
-        console.log(dash)
+        const bitSets = this.alphabet
         for (let state of states) {
-            process.stdout.write(`|${state.id}/${state.output.toString()}\t\t`)
-            for (let order of orders) {
-                process.stdout.write(
-                    `|${state.connections.get(order)![0].id}\t`
-                )
+            tableData[state.id] = {}
+            tableData[state.id]['output'] = state.output.toString()
+            for (let element of bitSets) {
+                let ans = ''
+
+                let connections = state.connections.get(element)
+                if (connections) {
+                    for (let i = 0; i < connections!.length - 1; i++) {
+                        ans += `${connections![i].id}, `
+                    }
+                    ans += connections![connections!.length - 1]!.id
+                }
+                tableData[state.id][element.toString()] = ans
             }
-            process.stdout.write('|\n')
-            console.log(dash)
         }
+        console.table(tableData)
+        // for (let element of bitSets) {
+        // }
+        // console.log(this.states);
+        // const states = this.states
+        // let bitSets = this.alphabet
+        // // console.log(bitSets);
+        // let header = '|State/Input\t'
+        // const orders: BitSet[] = []
+        // for (let bit of bitSets) {
+        //     orders.push(bit)
+        //     header += `|${bit.toString()}\t`
+        // }
+        // header += '|'
+
+        // let dash = '----'
+        // for (let head of header) {
+        //     if (dash)
+        //         if (head === '\t') {
+        //             dash += '---'
+        //         }
+        //     dash += '-'
+        // }
+
+        // console.log(dash)
+        // console.log(header)
+        // console.log(dash)
+        // for (let state of states) {
+        //     process.stdout.write(`|${state.id}/${state.output.toString()}\t\t`)
+        //     for (let order of orders) {
+        //         process.stdout.write(
+        //             `|${state.connections.get(order)![0].id}\t`
+        //         )
+        //     }
+        //     process.stdout.write('|\n')
+        //     console.log(dash)
+        // }
     }
 
     formatCanonicalExpression(): void {
@@ -307,7 +352,6 @@ export class FiniteAutomataState {
     }
 
     addConnection(bitSet: BitSet, state: FiniteAutomataState) {
-        console.log("addcons:", bitSet)
         if (!this.connections.has(bitSet)) {
             this.connections.set(bitSet, [])
         }
