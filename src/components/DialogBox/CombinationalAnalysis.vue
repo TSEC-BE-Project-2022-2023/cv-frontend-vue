@@ -28,7 +28,7 @@ import {
 
 import { validateFiniteAutomata } from '../../simulator/src/fsm_simulator/validate'
 
-import { stripTags } from '#/simulator/src/utils'
+import { showError, stripTags } from '#/simulator/src/utils'
 import { useState } from '#/store/SimulatorStore/state'
 import messageBox from '@/MessageBox/messageBox.vue'
 import { ref } from '@vue/reactivity'
@@ -724,10 +724,18 @@ function printBooleanTable() {
 
 //@ts-ignore
 window.drawCircuit = (finiteAutomata) => {
+    let validate = validateFiniteAutomata(finiteAutomata)
+    if(validate !== null) {
+        showError(validate)
+        return
+    } 
     console.log('State Transition Table: ')
     finiteAutomata.drawStateTransitionTable()
     console.log('Truth Table: ')
     finiteAutomata.formatTruthTable()
+    console.log('Canonical Expressions: ')
+    console.table(finiteAutomata.formatCanonicalExpression())
+    console.log(finiteAutomata.generateCombinedTruthTable())
     const { outputBitsMinterms, newStateBitsMinterms } =
         finiteAutomata.generateMinTermSets()
     let numVarArgs = 0
@@ -818,12 +826,11 @@ window.drawCircuit = (finiteAutomata) => {
 
         InputStartX += 100
     }
-    console.log(newStateMinimizedExpressions)
     let allMinimizedExpressions = [
         ...newStateMinimizedExpressions,
         ...outputStateMinimizedExpressions,
     ]
-    console.log(outputStateMinimizedExpressions)
+    console.log('Reduced Expressions', allMinimizedExpressions)
     let allOutputs = []
     for (let i = 0, counter = 0; i < allMinimizedExpressions.length; i++) {
         let output = []
@@ -835,7 +842,6 @@ window.drawCircuit = (finiteAutomata) => {
                     count += 1
                 }
             }
-            console.log(count)
             if (count === 1) {
                 const n = new Node(
                     InputStartX + 20,
@@ -914,7 +920,6 @@ window.drawCircuit = (finiteAutomata) => {
             }
         }
         allOutputs.push(output)
-        console.log(allOutputs)
     }
     InputStartX += 100
     for (let i = 0; i < allOutputs.length; i++) {
@@ -924,7 +929,6 @@ window.drawCircuit = (finiteAutomata) => {
         let y = output.reduce((sum, { y }) => sum + y, 0) / output.length
 
         let outputNode
-        console.log('length', output.length)
         if (output.length === 1) {
             let node = output[0]
             if (node instanceof AndGate)

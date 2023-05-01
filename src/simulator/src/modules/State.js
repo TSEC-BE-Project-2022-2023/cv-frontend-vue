@@ -21,6 +21,7 @@ import { changeInputSize } from '../modules'
  * @category modules
  */
 import { colors } from '../themer/themer'
+import { truncateString } from '../utils'
 
 const BASE_AZ_CHARSET = 'ABCDEFGHIKJLMNOPQRSTUVWXYZ'
 function toBaseAZ(n) {
@@ -153,17 +154,17 @@ export default class State extends CircuitElement {
         let stateMap = new Map()
         let currentStates = [this]
         while (currentStates.length > 0) {
-            let fromState = currentStates.shift()
+            let fromState = currentStates.shift() // {'E' : State(E), }
             stateMap.set(fromState.label, fromState)
             for (let n of fromState.nodeList) {
-                let { state, transition } = findOtherEndOfWire(
-                    n,
-                    this.scope.faWires
-                )
-                if (!state) continue
+                let transitions = findOtherEndOfWire(n, this.scope.faWires)
+                for (let k = 0; k < transitions.length; k++) {
+                    let { state, transition } = transitions[k]
+                    if (!state) continue
 
-                if (!stateMap.has(state.label)) currentStates.push(state)
-                addTransition(fromState.label, state.label, transition)
+                    if (!stateMap.has(state.label)) currentStates.push(state)
+                    addTransition(fromState.label, state.label, transition)
+                }
             }
         }
 
@@ -214,28 +215,47 @@ export default class State extends CircuitElement {
 // wires = [["node1", "tnode2"], ["tnode2", "node3"]]
 
 function findOtherEndOfWire(start, wires) {
-    let visitedSet = new Set()
-    let node = start
-    let transition = null
-    while (true) {
-        let nextNode = null
-        for (let i = 0; i < wires.length; i++) {
-            if (visitedSet.has(i)) continue
-            let { node1, node2, label } = wires[i]
-            if (node.id == node1.id) {
-                nextNode = node2
-                transition ||= label
-                visitedSet.add(i)
+    let ret = []
+    let num_times = 0
+    for (let i = 0; i < wires.length; i++) {
+        if (start.id == wires[i].node1.id) {
+            num_times++
+        }
+    }
+    let visited_node = []
+    for (let j = 0; j < num_times; j++) {
+        let visitedSet = new Set()
+        let node = start
+        let transition = null
+        let nextt = false
+        while (true) {
+            let nextNode = null
+            for (let i = 0; i < wires.length; i++) {
+                if (visitedSet.has(i) || visited_node.includes(i)) continue
+                let { node1, node2, label } = wires[i]
+                if (start.id == node1.id) {
+                    visited_node.push(i)
+                }
+                if (node.id == node1.id) {
+                    nextNode = node2
+                    transition ||= label
+                    visitedSet.add(i)
+                    break
+                }
+            }
+            if (!nextNode) break
+
+            node = nextNode
+            if (node.parent instanceof State) {
+                if (transition) ret.push({ state: node.parent, transition })
+                nextt = true
+                break
             }
         }
-        if (!nextNode) break
-
-        node = nextNode
-        if (node.parent instanceof State)
-            return { state: node.parent, transition }
+        if(!nextt)
+            ret.push({ state: null, transition })
     }
-
-    return { state: null, transition }
+    return ret
 }
 
 /**

@@ -244,7 +244,7 @@ export class FiniteAutomata {
         // }
     }
 
-    formatCanonicalExpression(): void {
+    formatCanonicalExpression(): any {
         const expressions: string[] = new Array()
 
         const truthTableData = this.generateCombinedTruthTable()[0]
@@ -276,7 +276,7 @@ export class FiniteAutomata {
             expressions.push(expression.slice(0, expression.length - 3))
             count--
         }
-        console.log(expressions)
+        return expressions
     }
 
     getExpression(
