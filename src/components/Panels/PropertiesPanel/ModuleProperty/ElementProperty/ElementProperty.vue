@@ -136,7 +136,7 @@
                 }}
                 <thead>
                     <tr style="text-align: left; font-weight: bold;">
-                        <th v-for="header in table[0]" :key="header" style="padding: 5px 0px;">
+                        <th v-for="header in table[0]" :key="header" style="padding: 5px 25px 5px 0px;">
                             {{ header }}
                         </th>
                     </tr>
