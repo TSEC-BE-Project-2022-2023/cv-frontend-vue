@@ -138,7 +138,7 @@ function clearData() {
     output.value = []
 }
 
-function dialogBoxConformation(selectedOption, circuitItem) {
+function dialogBoxConformation(selectedOption: string, circuitItem: any) {
     // SimulatorState.dialogBox.combinationalanalysis_dialog = false
     console.log(inputArr.value)
     console.log(selectedOption)
@@ -246,7 +246,7 @@ function createLogicTable() {
     }
 }
 
-function createBooleanPrompt(inputList, outputList, scope = globalScope) {
+function createBooleanPrompt(inputList: any[], outputList: string[], scope = globalScope) {
     inputListNames.value =
         inputList || prompt('Enter inputs separated by commas').split(',')
     outputListNames.value =
@@ -321,7 +321,7 @@ function createBooleanPrompt(inputList, outputList, scope = globalScope) {
     ]
 }
 
-function generateBooleanTableData(outputListNames) {
+function generateBooleanTableData(outputListNames: string | any[]) {
     var data = {}
     for (var i = 0; i < outputListNames.length; i++) {
         data[outputListNames[i]] = {
@@ -338,9 +338,9 @@ function generateBooleanTableData(outputListNames) {
 }
 
 function drawCombinationalAnalysis(
-    combinationalData,
-    inputList,
-    outputList,
+    combinationalData: string | any[],
+    inputList: string | any[],
+    outputList: string[],
     scope = globalScope
 ) {
     console.log('inside draw CA')
@@ -416,7 +416,7 @@ function drawCombinationalAnalysis(
         logixNodes.push(notG.output1)
     }
 
-    function countTerm(s) {
+    function countTerm(s: string | any[]) {
         var c = 0
         for (var i = 0; i < s.length; i++) {
             if (s[i] !== '-') c++
@@ -564,7 +564,7 @@ function drawCombinationalAnalysis(
  * @param {Array}  inputListNames - labels for input nodes
  * @param {String} booleanExpression - boolean expression which is to be solved
  */
-function solveBooleanFunction(inputListNames, booleanExpression) {
+function solveBooleanFunction(inputListNames: string | any[], booleanExpression: { match: (arg0: RegExp) => null }) {
     let i
     let j
     output.value = []
@@ -610,7 +610,7 @@ function solveBooleanFunction(inputListNames, booleanExpression) {
         output.value[i] = solve(equation)
     }
     // generates solution for the truth table of booleanexpression
-    function solve(equation) {
+    function solve(equation: string | string[]) {
         while (equation.indexOf('(') != -1) {
             const start = equation.lastIndexOf('(')
             const end = equation.indexOf(')', start)
@@ -720,7 +720,70 @@ function printBooleanTable() {
 //     ['State', 0, 1],
 //     ['A', 'A', 'C'],
 //     ['C', 'A', 'C'],
-// ]
+// 
+
+window.getExpression = (newStateMinimizedExpressions: any[], outputStateMinimizedExpressions: any, b_num: any, inp_num: any, out_num: any) => {
+    const expressions = []
+    for(let i=b_num-1; i>=0; i--) {
+        const curr_eq = newStateMinimizedExpressions[b_num - (i+1)]
+        let str = `b${i}=`
+        for(let curr = 0; curr < curr_eq.length; curr++) {
+            let curr_str = curr_eq[curr]
+            for(let j=0; j<b_num; j++) {
+                let char = curr_str[j]
+                if(char == '_') continue
+                if(char == '1') {
+                    str += `b${b_num - (j+1)}`
+                }
+                if(char == '0') {
+                    str += `b${b_num - (j+1)}'`
+                }
+            }
+            for(let j=0; j<out_num; j++) {
+                let char = curr_str[b_num+j]
+                if(char == '_') continue
+                if(char == '1') {
+                    str += `i${out_num - (j+1)}`
+                }
+                if(char == '0') {
+                    str += `i${out_num - (j+1)}'`
+                }
+            }
+            str+='+'
+        }
+        expressions.push(str.slice(0, str.length-1))
+    }
+    for(let i=out_num-1; i>=0; i--) {
+        const curr_eq = outputStateMinimizedExpressions[out_num - (i+1)]
+        let str = `i${i}=`
+        for(let curr = 0; curr < curr_eq.length; curr++) {
+            let curr_str = curr_eq[curr]
+            for(let j=0; j<b_num; j++) {
+                let char = curr_str[j]
+                if(char == '_') continue
+                if(char == '1') {
+                    str += `b${b_num - (j+1)}`
+                }
+                if(char == '0') {
+                    str += `b${b_num - (j+1)}'`
+                }
+            }
+            for(let j=0; j<out_num; j++) {
+                let char = curr_str[b_num+j]
+                if(char == '_') continue
+                if(char == '1') {
+                    str += `i${out_num - (j+1)}`
+                }
+                if(char == '0') {
+                    str += `i${out_num - (j+1)}'`
+                }
+            }
+            str+='+'
+        }
+        expressions.push(str.slice(0, str.length-1))
+    }
+    return expressions
+}
 
 //@ts-ignore
 window.drawCircuit = (finiteAutomata) => {
@@ -735,7 +798,6 @@ window.drawCircuit = (finiteAutomata) => {
     finiteAutomata.formatTruthTable()
     console.log('Canonical Expressions: ')
     console.table(finiteAutomata.formatCanonicalExpression())
-    console.log(finiteAutomata.generateCombinedTruthTable())
     const { outputBitsMinterms, newStateBitsMinterms } =
         finiteAutomata.generateMinTermSets()
     let numVarArgs = 0
@@ -830,7 +892,12 @@ window.drawCircuit = (finiteAutomata) => {
         ...newStateMinimizedExpressions,
         ...outputStateMinimizedExpressions,
     ]
-    console.log('Reduced Expressions', allMinimizedExpressions)
+    let combinedTruthTable = finiteAutomata.generateCombinedTruthTable()
+    const b_num = combinedTruthTable[0][1].length
+    const inp_num = combinedTruthTable[0][0].length
+    const out_num = combinedTruthTable[0][2].length
+    console.log("Reduced Expressions")
+    console.table(window.getExpression(newStateMinimizedExpressions, outputStateMinimizedExpressions, b_num, inp_num, out_num))
     let allOutputs = []
     for (let i = 0, counter = 0; i < allMinimizedExpressions.length; i++) {
         let output = []
